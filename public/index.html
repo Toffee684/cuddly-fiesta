@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weekly Startup Sourcing</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero card">
+        <div>
+          <p class="eyebrow">Weekly startup sourcing workspace</p>
+          <h1>Scrape curated startup sources, compare against HubSpot, and surface net-new accounts.</h1>
+          <p class="hero-copy">
+            Manually control which websites are scraped each week, let AI suggest adjacent websites,
+            and review concise startup summaries before your team reaches out.
+          </p>
+        </div>
+        <div class="hero-stats">
+          <div>
+            <span class="stat-label">Cadence</span>
+            <strong>Weekly</strong>
+          </div>
+          <div>
+            <span class="stat-label">Workflow</span>
+            <strong>Source → Compare → Prioritize</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="card panel sources-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">1. Source control</p>
+              <h2>Choose websites to scrape</h2>
+            </div>
+            <button id="loadDemoButton" class="secondary-button">Load suggested stack</button>
+          </div>
+          <p class="panel-copy">
+            Toggle sites on or off from the frontend so your weekly sourcing run stays curated and auditable.
+          </p>
+          <div id="sourceList" class="source-list"></div>
+          <div class="button-row">
+            <button id="recommendButton">AI recommend similar websites</button>
+            <button id="runButton" class="accent-button">Run weekly sourcing</button>
+          </div>
+        </section>
+
+        <section class="card panel sidebar-panel">
+          <div>
+            <p class="eyebrow">2. CRM context</p>
+            <h2>Existing HubSpot companies</h2>
+          </div>
+          <div id="hubspotList" class="crm-list"></div>
+        </section>
+
+        <section class="card panel recommendations-panel">
+          <div>
+            <p class="eyebrow">AI recommendations</p>
+            <h2>Similar websites to add next</h2>
+          </div>
+          <div id="recommendations" class="empty-state">
+            Select a few sources and click the AI recommendation button to see adjacent websites.
+          </div>
+        </section>
+
+        <section class="card panel report-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">3. Output</p>
+              <h2>Net-new startup list</h2>
+            </div>
+            <div id="totals" class="totals"></div>
+          </div>
+          <div id="report" class="empty-state">
+            Run the weekly sourcing job to compare scraped startups against your HubSpot CRM.
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="sourceTemplate">
+      <label class="source-card">
+        <div class="source-main">
+          <input type="checkbox" class="source-toggle" />
+          <div>
+            <div class="source-header">
+              <strong class="source-name"></strong>
+              <span class="source-category"></span>
+            </div>
+            <a class="source-link" target="_blank" rel="noreferrer"></a>
+          </div>
+        </div>
+      </label>
+    </template>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
