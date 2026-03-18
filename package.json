@@ -1,0 +1,10 @@
+{
+  "name": "cuddly-fiesta",
+  "version": "1.0.0",
+  "description": "Weekly startup sourcing scraping tool prototype",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check public/app.js"
+  }
+}
