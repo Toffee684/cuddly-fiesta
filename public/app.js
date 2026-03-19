@@ -1,9 +1,19 @@
-const storageKey = 'weekly-startup-sourcing.sources';
+const selectionStorageKey = 'weekly-startup-sourcing.sources';
+const settingsStorageKey = 'weekly-startup-sourcing.settings';
+
+const defaultSettings = {
+  compactMode: false,
+  showSummaries: true,
+  showMatches: true,
+  autoLoadDemo: true,
+};
 
 const state = {
   availableSources: [],
   hubspotCompanies: [],
   selectedIds: new Set(),
+  settings: { ...defaultSettings },
+  lastReport: null,
 };
 
 const sourceList = document.querySelector('#sourceList');
@@ -15,6 +25,12 @@ const recommendButton = document.querySelector('#recommendButton');
 const runButton = document.querySelector('#runButton');
 const loadDemoButton = document.querySelector('#loadDemoButton');
 const sourceTemplate = document.querySelector('#sourceTemplate');
+const settingsButton = document.querySelector('#settingsButton');
+const settingsPanel = document.querySelector('#settingsPanel');
+const compactModeToggle = document.querySelector('#compactModeToggle');
+const showSummariesToggle = document.querySelector('#showSummariesToggle');
+const showMatchesToggle = document.querySelector('#showMatchesToggle');
+const autoLoadDemoToggle = document.querySelector('#autoLoadDemoToggle');
 
 async function requestJson(url, options = {}) {
   const response = await fetch(url, {
@@ -32,16 +48,57 @@ async function requestJson(url, options = {}) {
 }
 
 function saveSelections() {
-  localStorage.setItem(storageKey, JSON.stringify(Array.from(state.selectedIds)));
+  localStorage.setItem(selectionStorageKey, JSON.stringify(Array.from(state.selectedIds)));
 }
 
 function loadSelections() {
   try {
-    const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    const saved = JSON.parse(localStorage.getItem(selectionStorageKey) || '[]');
     state.selectedIds = new Set(saved);
   } catch (error) {
     state.selectedIds = new Set();
   }
+}
+
+function saveSettings() {
+  localStorage.setItem(settingsStorageKey, JSON.stringify(state.settings));
+}
+
+function loadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(settingsStorageKey) || '{}');
+    state.settings = { ...defaultSettings, ...saved };
+  } catch (error) {
+    state.settings = { ...defaultSettings };
+  }
+}
+
+function syncSettingsControls() {
+  compactModeToggle.checked = state.settings.compactMode;
+  showSummariesToggle.checked = state.settings.showSummaries;
+  showMatchesToggle.checked = state.settings.showMatches;
+  autoLoadDemoToggle.checked = state.settings.autoLoadDemo;
+}
+
+function applySettings() {
+  document.body.classList.toggle('compact-mode', state.settings.compactMode);
+  syncSettingsControls();
+
+  if (state.lastReport) {
+    renderReport(state.lastReport);
+  }
+}
+
+function updateSetting(name, value) {
+  state.settings[name] = value;
+  saveSettings();
+  applySettings();
+}
+
+function toggleSettingsMenu(forceOpen) {
+  const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : settingsPanel.hidden;
+  settingsPanel.hidden = !shouldOpen;
+  settingsButton.setAttribute('aria-expanded', String(shouldOpen));
 }
 
 function getSelectedWebsites() {
@@ -142,47 +199,70 @@ function renderTotals(summary) {
     .join('');
 }
 
+function renderSummaryCopy(startup, existing = false) {
+  if (existing) {
+    return `Already tracked in HubSpot · ${startup.hubspotStage} · Owner: ${startup.hubspotOwner}`;
+  }
+
+  return startup.summary;
+}
+
 function renderReport(data) {
+  state.lastReport = data;
   renderTotals(data.totals);
+
+  const newStartupMarkup = data.newStartups.length
+    ? data.newStartups
+        .map(
+          (startup) => `
+            <article class="startup-card">
+              <strong>${startup.name}</strong>
+              <div class="meta">${startup.domain} · Source: ${startup.source}</div>
+              ${
+                state.settings.showSummaries
+                  ? `<p class="summary-copy">${renderSummaryCopy(startup)}</p>`
+                  : ''
+              }
+            </article>
+          `,
+        )
+        .join('')
+    : '<div class="empty-state">Every scraped startup already exists in HubSpot.</div>';
+
+  const matchesMarkup = state.settings.showMatches
+    ? `
+      <section class="report-section">
+        <h3>Existing HubSpot matches</h3>
+        ${
+          data.existingMatches.length
+            ? data.existingMatches
+                .map(
+                  (startup) => `
+                    <article class="match-card">
+                      <strong>${startup.name}</strong>
+                      <div class="meta">${startup.domain} · Source: ${startup.source}</div>
+                      ${
+                        state.settings.showSummaries
+                          ? `<p class="summary-copy">${renderSummaryCopy(startup, true)}</p>`
+                          : ''
+                      }
+                    </article>
+                  `,
+                )
+                .join('')
+            : '<div class="empty-state">No CRM matches found in this run.</div>'
+        }
+      </section>
+    `
+    : '';
 
   report.className = 'report-grid';
   report.innerHTML = `
     <section class="report-section">
       <h3>Net-new startups to review</h3>
-      ${
-        data.newStartups.length
-          ? data.newStartups
-              .map(
-                (startup) => `
-                  <article class="startup-card">
-                    <strong>${startup.name}</strong>
-                    <div class="meta">${startup.domain} · Source: ${startup.source}</div>
-                    <p class="summary-copy">${startup.summary}</p>
-                  </article>
-                `,
-              )
-              .join('')
-          : '<div class="empty-state">Every scraped startup already exists in HubSpot.</div>'
-      }
+      ${newStartupMarkup}
     </section>
-    <section class="report-section">
-      <h3>Existing HubSpot matches</h3>
-      ${
-        data.existingMatches.length
-          ? data.existingMatches
-              .map(
-                (startup) => `
-                  <article class="match-card">
-                    <strong>${startup.name}</strong>
-                    <div class="meta">${startup.domain} · Source: ${startup.source}</div>
-                    <p class="summary-copy">Already tracked in HubSpot · ${startup.hubspotStage} · Owner: ${startup.hubspotOwner}</p>
-                  </article>
-                `,
-              )
-              .join('')
-          : '<div class="empty-state">No CRM matches found in this run.</div>'
-      }
-    </section>
+    ${matchesMarkup}
   `;
 }
 
@@ -191,8 +271,11 @@ async function bootstrap() {
   state.availableSources = config.availableSources;
   state.hubspotCompanies = config.hubspotCompanies;
 
+  loadSettings();
+  applySettings();
   loadSelections();
-  if (!state.selectedIds.size) {
+
+  if (!state.selectedIds.size && state.settings.autoLoadDemo) {
     ['yc', 'producthunt', 'betalist'].forEach((id) => state.selectedIds.add(id));
     saveSelections();
   }
@@ -243,6 +326,38 @@ loadDemoButton.addEventListener('click', () => {
   state.selectedIds = new Set(['yc', 'producthunt', 'wellfound', 'techstars']);
   saveSelections();
   renderSources();
+});
+
+settingsButton.addEventListener('click', () => {
+  toggleSettingsMenu();
+});
+
+compactModeToggle.addEventListener('change', () => {
+  updateSetting('compactMode', compactModeToggle.checked);
+});
+
+showSummariesToggle.addEventListener('change', () => {
+  updateSetting('showSummaries', showSummariesToggle.checked);
+});
+
+showMatchesToggle.addEventListener('change', () => {
+  updateSetting('showMatches', showMatchesToggle.checked);
+});
+
+autoLoadDemoToggle.addEventListener('change', () => {
+  updateSetting('autoLoadDemo', autoLoadDemoToggle.checked);
+});
+
+document.addEventListener('click', (event) => {
+  if (!settingsPanel.hidden && !event.target.closest('.settings-menu')) {
+    toggleSettingsMenu(false);
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    toggleSettingsMenu(false);
+  }
 });
 
 bootstrap().catch(() => {

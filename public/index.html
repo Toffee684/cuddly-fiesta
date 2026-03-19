@@ -9,9 +9,58 @@
   <body>
     <div class="app-shell">
       <header class="hero card">
-        <div>
-          <p class="eyebrow">Weekly startup sourcing workspace</p>
-          <h1>Scrape curated startup sources, compare against HubSpot, and surface net-new accounts.</h1>
+        <div class="hero-content">
+          <div class="hero-topbar">
+            <div>
+              <p class="eyebrow">Weekly startup sourcing workspace</p>
+              <h1>Scrape curated startup sources, compare against HubSpot, and surface net-new accounts.</h1>
+            </div>
+            <div class="settings-menu">
+              <button
+                id="settingsButton"
+                class="secondary-button settings-trigger"
+                type="button"
+                aria-expanded="false"
+                aria-controls="settingsPanel"
+              >
+                Settings
+              </button>
+              <section id="settingsPanel" class="settings-panel" hidden>
+                <div>
+                  <p class="eyebrow">Workspace settings</p>
+                  <h2>Customize this dashboard</h2>
+                </div>
+                <label class="settings-option">
+                  <span>
+                    <strong>Compact dashboard layout</strong>
+                    <small>Tighten spacing so more sourcing data fits on screen.</small>
+                  </span>
+                  <input id="compactModeToggle" type="checkbox" />
+                </label>
+                <label class="settings-option">
+                  <span>
+                    <strong>Show startup summaries</strong>
+                    <small>Keep AI-generated startup summaries visible in the report.</small>
+                  </span>
+                  <input id="showSummariesToggle" type="checkbox" />
+                </label>
+                <label class="settings-option">
+                  <span>
+                    <strong>Include HubSpot matches</strong>
+                    <small>Display companies already tracked in HubSpot after each run.</small>
+                  </span>
+                  <input id="showMatchesToggle" type="checkbox" />
+                </label>
+                <label class="settings-option">
+                  <span>
+                    <strong>Auto-load suggested stack</strong>
+                    <small>Preselect the recommended website stack for first-time visitors.</small>
+                  </span>
+                  <input id="autoLoadDemoToggle" type="checkbox" />
+                </label>
+              </section>
+            </div>
+          </div>
           <p class="hero-copy">
             Manually control which websites are scraped each week, let AI suggest adjacent websites,
             and review concise startup summaries before your team reaches out.
